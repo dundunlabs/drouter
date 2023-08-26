@@ -20,6 +20,18 @@ func paramsHandler(ctx *prenn.Context) any {
 	return ctx.Params
 }
 
+func errorHandler(ctx *prenn.Context) any {
+	return errors.New("any error")
+}
+
+func exceptionHandler(ctx *prenn.Context) any {
+	return prenn.ExceptionBadRequest
+}
+
+func panicHandler(ctx *prenn.Context) any {
+	panic(prenn.ExceptionBadRequest.WithError(errors.New("panic")))
+}
+
 func adminMiddleware(next prenn.Handler) prenn.Handler {
 	return func(ctx *prenn.Context) any {
 		return errors.New("403 Forbidden")
@@ -30,9 +42,9 @@ func init() {
 	router.GET("", simpleHandler)
 	router.WithGroup("api/:version", func(g prenn.Group) {
 		g.WithGroup("users", func(g prenn.Group) {
-			g.POST("", paramsHandler)
-			g.PUT(":id", paramsHandler)
-			g.PATCH(":id", paramsHandler)
+			g.POST("", errorHandler)
+			g.PUT(":id", exceptionHandler)
+			g.PATCH(":id", panicHandler)
 			g.DELETE(":id", paramsHandler)
 		})
 		g.GET("*any", paramsHandler)
@@ -65,6 +77,17 @@ func TestNotFound(t *testing.T) {
 	}
 }
 
+func TestInternalServerError(t *testing.T) {
+	res := fetch(http.MethodPost, "/api/v1/users", nil)
+	if res.StatusCode != http.StatusInternalServerError {
+		t.Error("should return statusCode 500")
+	}
+	body, _ := io.ReadAll(res.Body)
+	if got, want := string(body), "any error\n"; got != want {
+		t.Errorf("should return body %q, got %q", want, got)
+	}
+}
+
 func TestDynamicRoutes(t *testing.T) {
 	res := fetch(http.MethodDelete, "/api/v1/users/100", nil)
 	body, _ := io.ReadAll(res.Body)
@@ -75,6 +98,28 @@ func TestDynamicRoutes(t *testing.T) {
 	res = fetch(http.MethodGet, "/api/v1/foo/bar", nil)
 	body, _ = io.ReadAll(res.Body)
 	if got, want := string(body), "{\"any\":\"foo/bar\",\"version\":\"v1\"}"; got != want {
+		t.Errorf("should return body %q, got %q", want, got)
+	}
+}
+
+func TestException(t *testing.T) {
+	res := fetch(http.MethodPut, "/api/v1/users/1", nil)
+	if res.StatusCode != http.StatusBadRequest {
+		t.Error("should return statusCode 400")
+	}
+	body, _ := io.ReadAll(res.Body)
+	if got, want := string(body), "Bad Request\n"; got != want {
+		t.Errorf("should return body %q, got %q", want, got)
+	}
+}
+
+func TestPanic(t *testing.T) {
+	res := fetch(http.MethodPatch, "/api/v1/users/1", nil)
+	if res.StatusCode != http.StatusBadRequest {
+		t.Error("should return statusCode 400")
+	}
+	body, _ := io.ReadAll(res.Body)
+	if got, want := string(body), "panic\n"; got != want {
 		t.Errorf("should return body %q, got %q", want, got)
 	}
 }

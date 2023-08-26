@@ -49,7 +49,11 @@ func (g Group) mergedMdws() []Middleware {
 }
 
 func (g *Group) addRoute(method string, path string, handler Handler) {
-	p := g.pathToGroup() + "/" + path
+	p := joinPath(g.pathToGroup(), path)
+	if p == "" {
+		p = "/"
+	}
+
 	r := route{
 		method:      method,
 		path:        p,
@@ -64,6 +68,14 @@ func (g Group) pathToGroup() string {
 	if g.parent == nil {
 		return g.path
 	}
+	return joinPath(g.parent.pathToGroup(), g.path)
+}
 
-	return g.parent.pathToGroup() + "/" + g.path
+func joinPath(p1 string, p2 string) string {
+	switch p2 {
+	case "", "/":
+		return p1
+	default:
+		return p1 + "/" + p2
+	}
 }
