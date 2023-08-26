@@ -1,6 +1,8 @@
 package prenn_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -32,6 +34,16 @@ func panicHandler(ctx *prenn.Context) any {
 	panic(prenn.ExceptionBadRequest.WithError(errors.New("panic")))
 }
 
+func bindingHandler(ctx *prenn.Context) any {
+	type Body struct {
+		Name string `json:"name" validate:"required"`
+		Age  int    `json:"age" validate:"min=18"`
+	}
+	var body Body
+	ctx.MustBindBody(&body)
+	return body
+}
+
 func adminMiddleware(next prenn.Handler) prenn.Handler {
 	return func(ctx *prenn.Context) any {
 		return errors.New("403 Forbidden")
@@ -42,7 +54,8 @@ func init() {
 	router.GET("", simpleHandler)
 	router.WithGroup("api/:version", func(g prenn.Group) {
 		g.WithGroup("users", func(g prenn.Group) {
-			g.POST("", errorHandler)
+			g.GET("", errorHandler)
+			g.POST("", bindingHandler)
 			g.PUT(":id", exceptionHandler)
 			g.PATCH(":id", panicHandler)
 			g.DELETE(":id", paramsHandler)
@@ -78,7 +91,7 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestInternalServerError(t *testing.T) {
-	res := fetch(http.MethodPost, "/api/v1/users", nil)
+	res := fetch(http.MethodGet, "/api/v1/users", nil)
 	if res.StatusCode != http.StatusInternalServerError {
 		t.Error("should return statusCode 500")
 	}
@@ -122,6 +135,40 @@ func TestPanic(t *testing.T) {
 	if got, want := string(body), "panic\n"; got != want {
 		t.Errorf("should return body %q, got %q", want, got)
 	}
+}
+
+func TestBinding(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		data := map[string]any{
+			"name": "John",
+			"age":  20,
+		}
+		v, _ := json.Marshal(data)
+		res := fetch(http.MethodPost, "/api/v1/users", bytes.NewBuffer(v))
+		if res.StatusCode != http.StatusOK {
+			t.Error("should return statusCode 200")
+		}
+		body, _ := io.ReadAll(res.Body)
+		if got, want := string(body), "{\"name\":\"John\",\"age\":20}"; got != want {
+			t.Errorf("should return body %q, got %q", want, got)
+		}
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		data := map[string]any{
+			"name": "John",
+			"age":  17,
+		}
+		v, _ := json.Marshal(data)
+		res := fetch(http.MethodPost, "/api/v1/users", bytes.NewBuffer(v))
+		if res.StatusCode != http.StatusBadRequest {
+			t.Error("should return statusCode 400")
+		}
+		body, _ := io.ReadAll(res.Body)
+		if got, want := string(body), "Key: 'Body.Age' Error:Field validation for 'Age' failed on the 'min' tag\n"; got != want {
+			t.Errorf("should return body %q, got %q", want, got)
+		}
+	})
 }
 
 func TestMiddleware(t *testing.T) {
