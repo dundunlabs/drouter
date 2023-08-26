@@ -27,24 +27,19 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case errMethodNotAllowed:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	default:
-		data := route.handle(&Context{
+		ctx := &Context{
 			Context:   r.Context(),
 			Writer:    w,
 			Request:   r,
 			Params:    params,
 			RoutePath: route.path,
-		})
-
-		switch data := data.(type) {
-		case nil:
-			w.WriteHeader(http.StatusNoContent)
-		case error:
-			http.Error(w, data.Error(), http.StatusInternalServerError)
-		default:
-			v, _ := json.Marshal(data)
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.Write(v)
 		}
+		defer func() {
+			r := recover()
+			handleResult(ctx, r)
+		}()
+		result := route.handle(ctx)
+		handleResult(ctx, result)
 	}
 }
 
@@ -71,4 +66,19 @@ func (router *Router) findRoute(method string, path string) (*route, Params, err
 
 func (router *Router) addRoute(r route) {
 	router.routes = append(router.routes, r)
+}
+
+func handleResult(ctx *Context, result any) {
+	switch result := result.(type) {
+	case nil:
+		ctx.Writer.WriteHeader(http.StatusNoContent)
+	case Exception:
+		http.Error(ctx.Writer, result.Error(), result.statusCode)
+	case error:
+		http.Error(ctx.Writer, result.Error(), http.StatusInternalServerError)
+	default:
+		v, _ := json.Marshal(result)
+		ctx.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+		ctx.Writer.Write(v)
+	}
 }
