@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func New() *Router {
-	r := &Router{}
+	r := &Router{
+		validate: validator.New(),
+	}
 	r.Group = Group{
 		router: r,
 	}
@@ -16,7 +20,8 @@ func New() *Router {
 
 type Router struct {
 	Group
-	routes []route
+	routes   []route
+	validate *validator.Validate
 }
 
 func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -33,6 +38,7 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Request:   r,
 			Params:    params,
 			RoutePath: route.path,
+			validate:  router.validate,
 		}
 		defer func() {
 			r := recover()
