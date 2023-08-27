@@ -39,8 +39,7 @@ func bindingHandler(ctx *prenn.Context) any {
 		Name string `json:"name" validate:"required"`
 		Age  int    `json:"age" validate:"min=18"`
 	}
-	var body Body
-	ctx.MustBindBody(&body)
+	body := prenn.MustBindBody[Body](ctx)
 	return body
 }
 
