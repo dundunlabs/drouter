@@ -5,12 +5,13 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/dundunlabs/prenn/validate"
 	"github.com/go-playground/validator/v10"
 )
 
 func New() *Router {
 	r := &Router{
-		validate: validator.New(),
+		validate: validate.New(),
 	}
 	r.Group = Group{
 		router: r,
