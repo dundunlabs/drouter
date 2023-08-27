@@ -2,7 +2,6 @@ package prenn
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 
@@ -39,17 +38,4 @@ func (ctx *Context) Body() []byte {
 		ctx.body = body
 	}
 	return ctx.body
-}
-
-func (ctx *Context) BindBody(v any) error {
-	if err := json.Unmarshal(ctx.Body(), v); err != nil {
-		return err
-	}
-	return ctx.validate.Struct(v)
-}
-
-func (ctx *Context) MustBindBody(v any) {
-	if err := ctx.BindBody(v); err != nil {
-		panic(ExceptionBadRequest.WithError(err))
-	}
 }
