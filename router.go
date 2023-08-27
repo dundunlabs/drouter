@@ -42,8 +42,9 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			validate:  router.validate,
 		}
 		defer func() {
-			r := recover()
-			handleResult(ctx, r)
+			if r := recover(); r != nil {
+				handleResult(ctx, r)
+			}
 		}()
 		result := route.handle(ctx)
 		handleResult(ctx, result)
