@@ -1,15 +1,15 @@
-package prenn_test
+package drouter_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dundunlabs/prenn"
+	"github.com/dundunlabs/drouter"
 )
 
 func BenchmarkRouterSimple(b *testing.B) {
-	router := prenn.New()
+	router := drouter.New()
 
 	router.GET("", simpleHandler)
 	router.GET("user/dimfeld", simpleHandler)
@@ -20,7 +20,7 @@ func BenchmarkRouterSimple(b *testing.B) {
 }
 
 func BenchmarkRouterRoot(b *testing.B) {
-	router := prenn.New()
+	router := drouter.New()
 
 	router.GET("", simpleHandler)
 	router.GET("user/dimfeld", simpleHandler)
@@ -31,7 +31,7 @@ func BenchmarkRouterRoot(b *testing.B) {
 }
 
 func BenchmarkRouterParam(b *testing.B) {
-	router := prenn.New()
+	router := drouter.New()
 
 	router.GET("", simpleHandler)
 	router.GET("user/:name", simpleHandler)
@@ -42,7 +42,7 @@ func BenchmarkRouterParam(b *testing.B) {
 }
 
 func BenchmarkRouterLongParams(b *testing.B) {
-	router := prenn.New()
+	router := drouter.New()
 
 	router.GET("", simpleHandler)
 	router.GET("user/:name/:resource", simpleHandler)
@@ -53,7 +53,7 @@ func BenchmarkRouterLongParams(b *testing.B) {
 }
 
 func BenchmarkRouterFiveColon(b *testing.B) {
-	router := prenn.New()
+	router := drouter.New()
 
 	router.GET("", simpleHandler)
 	router.GET(":a/:b/:c/:d/:e", simpleHandler)

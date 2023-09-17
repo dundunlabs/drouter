@@ -1,4 +1,4 @@
-package prenn_test
+package drouter_test
 
 import (
 	"bytes"
@@ -9,50 +9,50 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dundunlabs/prenn"
+	"github.com/dundunlabs/drouter"
 )
 
-var router = prenn.New()
+var router = drouter.New()
 
-func simpleHandler(ctx *prenn.Context) any {
+func simpleHandler(ctx *drouter.Context) any {
 	return nil
 }
 
-func paramsHandler(ctx *prenn.Context) any {
+func paramsHandler(ctx *drouter.Context) any {
 	return ctx.Params
 }
 
-func errorHandler(ctx *prenn.Context) any {
+func errorHandler(ctx *drouter.Context) any {
 	return errors.New("any error")
 }
 
-func exceptionHandler(ctx *prenn.Context) any {
-	return prenn.ExceptionBadRequest
+func exceptionHandler(ctx *drouter.Context) any {
+	return drouter.ExceptionBadRequest
 }
 
-func panicHandler(ctx *prenn.Context) any {
-	panic(prenn.ExceptionBadRequest.WithError(errors.New("panic")))
+func panicHandler(ctx *drouter.Context) any {
+	panic(drouter.ExceptionBadRequest.WithError(errors.New("panic")))
 }
 
-func bindingHandler(ctx *prenn.Context) any {
+func bindingHandler(ctx *drouter.Context) any {
 	type Body struct {
 		Name string `json:"name" validate:"required"`
 		Age  int    `json:"age" validate:"min=18"`
 	}
-	body := prenn.MustBindBody[Body](ctx)
+	body := drouter.MustBindBody[Body](ctx)
 	return body
 }
 
-func adminMiddleware(next prenn.Handler) prenn.Handler {
-	return func(ctx *prenn.Context) any {
+func adminMiddleware(next drouter.Handler) drouter.Handler {
+	return func(ctx *drouter.Context) any {
 		return errors.New("403 Forbidden")
 	}
 }
 
 func init() {
 	router.GET("", simpleHandler)
-	router.WithGroup("api/:version", func(g prenn.Group) {
-		g.WithGroup("users", func(g prenn.Group) {
+	router.WithGroup("api/:version", func(g drouter.Group) {
+		g.WithGroup("users", func(g drouter.Group) {
 			g.GET("", errorHandler)
 			g.POST("", bindingHandler)
 			g.PUT(":id", exceptionHandler)
@@ -61,7 +61,7 @@ func init() {
 		})
 		g.GET("*any", paramsHandler)
 	})
-	router.WithGroup("admin/api/:version", func(g prenn.Group) {
+	router.WithGroup("admin/api/:version", func(g drouter.Group) {
 		g.Use(adminMiddleware)
 
 		g.POST("customers", simpleHandler)

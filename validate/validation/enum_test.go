@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dundunlabs/prenn/validate/validation"
+	"github.com/dundunlabs/drouter/validate/validation"
 )
 
 func init() {

@@ -1,4 +1,4 @@
-module github.com/dundunlabs/prenn
+module github.com/dundunlabs/drouter
 
 go 1.20
 

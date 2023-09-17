@@ -1,11 +1,11 @@
-package prenn
+package drouter
 
 import (
 	"encoding/json"
 	"errors"
 	"net/http"
 
-	"github.com/dundunlabs/prenn/validate"
+	"github.com/dundunlabs/drouter/validate"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -52,8 +52,8 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 var (
-	errNotFound         = errors.New("prenn: route not found")
-	errMethodNotAllowed = errors.New("prenn: method not allowed")
+	errNotFound         = errors.New("drouter: route not found")
+	errMethodNotAllowed = errors.New("drouter: method not allowed")
 )
 
 func (router *Router) findRoute(method string, path string) (*route, Params, error) {

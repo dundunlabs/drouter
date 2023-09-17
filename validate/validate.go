@@ -1,7 +1,7 @@
 package validate
 
 import (
-	"github.com/dundunlabs/prenn/validate/validation"
+	"github.com/dundunlabs/drouter/validate/validation"
 	"github.com/go-playground/validator/v10"
 )
 

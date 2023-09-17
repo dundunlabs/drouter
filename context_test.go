@@ -1,18 +1,18 @@
-package prenn_test
+package drouter_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/dundunlabs/prenn"
+	"github.com/dundunlabs/drouter"
 )
 
 func TestParam(t *testing.T) {
-	params := prenn.Params{
+	params := drouter.Params{
 		"foo": "bar",
 	}
 
-	ctx := &prenn.Context{
+	ctx := &drouter.Context{
 		Context: context.Background(),
 		Params:  params,
 	}
@@ -23,7 +23,7 @@ func TestParam(t *testing.T) {
 }
 
 func TestWithValue(t *testing.T) {
-	ctx := &prenn.Context{
+	ctx := &drouter.Context{
 		Context: context.Background(),
 	}
 	ctx.WithValue("foo", "bar")
